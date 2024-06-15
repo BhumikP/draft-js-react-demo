@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Editor,
   EditorState,
@@ -7,12 +7,22 @@ import {
   getDefaultKeyBinding,
 } from "draft-js";
 import "draft-js/dist/Draft.css";
-import { decorator } from "../helper/draftHelper";
+import { convertToRaw } from "draft-js";
+import { convertFromRaw } from "draft-js";
 
 function Draft() {
-  const [editorState, setEditorState] = useState(() =>
-    EditorState.createEmpty(decorator),
-  );
+  const draftContent = localStorage.getItem("draftRaw");
+
+  const [editorState, setEditorState] = useState(() => {
+    if (draftContent) {
+      return EditorState.createWithContent(
+        convertFromRaw(JSON.parse(draftContent))
+      );
+    }
+    return EditorState.createEmpty();
+  });
+
+  const draftRef = useRef(null);
 
   const handleEditorChange = (newState) => {
     setEditorState(newState);
@@ -66,17 +76,17 @@ function Draft() {
           anchorOffset: 0,
           focusOffset: 1,
         }),
-        "backward",
+        "backward"
       );
       newContentState = Modifier.setBlockType(
         newContentState,
         newContentState.getSelectionAfter(),
-        "header-one",
+        "header-one"
       );
       newEditorState = EditorState.push(
         editorState,
         newContentState,
-        "change-block-type",
+        "change-block-type"
       );
     } else if (command === "apply-bold" && blockText === "*") {
       newContentState = Modifier.removeRange(
@@ -85,12 +95,12 @@ function Draft() {
           anchorOffset: 0,
           focusOffset: 1,
         }),
-        "backward",
+        "backward"
       );
       newEditorState = EditorState.push(
         editorState,
         newContentState,
-        "change-inline-style",
+        "change-inline-style"
       );
       newEditorState = RichUtils.toggleInlineStyle(newEditorState, "BOLD");
     } else if (command === "apply-red" && blockText === "**") {
@@ -100,12 +110,12 @@ function Draft() {
           anchorOffset: 0,
           focusOffset: 2,
         }),
-        "backward",
+        "backward"
       );
       newEditorState = EditorState.push(
         editorState,
         newContentState,
-        "change-inline-style",
+        "change-inline-style"
       );
       newEditorState = RichUtils.toggleInlineStyle(newEditorState, "RED");
     } else if (command === "apply-underline" && blockText === "***") {
@@ -115,12 +125,12 @@ function Draft() {
           anchorOffset: 0,
           focusOffset: 3,
         }),
-        "backward",
+        "backward"
       );
       newEditorState = EditorState.push(
         editorState,
         newContentState,
-        "change-inline-style",
+        "change-inline-style"
       );
       newEditorState = RichUtils.toggleInlineStyle(newEditorState, "UNDERLINE");
     }
@@ -133,24 +143,33 @@ function Draft() {
     return handleKeyCommand(command, editorState);
   };
 
+  const handleSave = () => {
+    let contentRaw = convertToRaw(editorState.getCurrentContent());
+    localStorage.setItem("draftRaw", JSON.stringify(contentRaw));
+  };
+
   return (
-    <>
-      <h1>Draft.js Rich Text Editor</h1>
+    <div className="m-3">
+      <div className="flex justify-between items-center mb-2">
+        <div></div>
+        <h1>Draft.js Rich Text Editor</h1>
+        <button className="button" onClick={handleSave}>
+          Save
+        </button>
+      </div>
       <div
-        style={{ border: "1px solid black", minHeight: "6em", cursor: "text" }}
-        // onClick={() => this.editor.focus()}
+        style={{ border: "2px solid blue", minHeight: "6em", cursor: "text" }}
+        onClick={() => draftRef.current.focus()}
       >
         <Editor
           editorState={editorState}
           onChange={handleEditorChange}
           handleKeyCommand={handleKeyCommandWithHash}
           keyBindingFn={keyBindingFn}
-          // ref={(element) => {
-          //   this.editor = element;
-          // }}
+          ref={draftRef}
         />
       </div>
-    </>
+    </div>
   );
 }
 
