@@ -9,6 +9,7 @@ import {
 import "draft-js/dist/Draft.css";
 import { convertToRaw } from "draft-js";
 import { convertFromRaw } from "draft-js";
+import { decorator } from "../helper/draftHelper";
 
 function Draft() {
   const draftContent = localStorage.getItem("draftRaw");
@@ -16,10 +17,11 @@ function Draft() {
   const [editorState, setEditorState] = useState(() => {
     if (draftContent) {
       return EditorState.createWithContent(
-        convertFromRaw(JSON.parse(draftContent))
+        convertFromRaw(JSON.parse(draftContent)),
+        decorator,
       );
     }
-    return EditorState.createEmpty();
+    return EditorState.createEmpty(decorator);
   });
 
   const draftRef = useRef(null);
@@ -76,17 +78,17 @@ function Draft() {
           anchorOffset: 0,
           focusOffset: 1,
         }),
-        "backward"
+        "backward",
       );
       newContentState = Modifier.setBlockType(
         newContentState,
         newContentState.getSelectionAfter(),
-        "header-one"
+        "header-one",
       );
       newEditorState = EditorState.push(
         editorState,
         newContentState,
-        "change-block-type"
+        "change-block-type",
       );
     } else if (command === "apply-bold" && blockText === "*") {
       newContentState = Modifier.removeRange(
@@ -95,12 +97,12 @@ function Draft() {
           anchorOffset: 0,
           focusOffset: 1,
         }),
-        "backward"
+        "backward",
       );
       newEditorState = EditorState.push(
         editorState,
         newContentState,
-        "change-inline-style"
+        "change-inline-style",
       );
       newEditorState = RichUtils.toggleInlineStyle(newEditorState, "BOLD");
     } else if (command === "apply-red" && blockText === "**") {
@@ -108,14 +110,14 @@ function Draft() {
         currentContent,
         selection.merge({
           anchorOffset: 0,
-          focusOffset: 2,
+          focusOffset: 3,
         }),
-        "backward"
+        "backward",
       );
       newEditorState = EditorState.push(
         editorState,
         newContentState,
-        "change-inline-style"
+        "change-inline-style",
       );
       newEditorState = RichUtils.toggleInlineStyle(newEditorState, "RED");
     } else if (command === "apply-underline" && blockText === "***") {
@@ -125,12 +127,12 @@ function Draft() {
           anchorOffset: 0,
           focusOffset: 3,
         }),
-        "backward"
+        "backward",
       );
       newEditorState = EditorState.push(
         editorState,
         newContentState,
-        "change-inline-style"
+        "change-inline-style",
       );
       newEditorState = RichUtils.toggleInlineStyle(newEditorState, "UNDERLINE");
     }
